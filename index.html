@@ -364,8 +364,7 @@ function renderResultados() {
     if (n.updated_at) {
       const u = document.createElement("div");
       u.className = "card-updated";
-      u.textContent = "Última actualización: " + formatearFecha(n.updated_at) + (n.updated_by_email ? " · " + n.updated_by_email : "");
-      body.appendChild(u);
+u.textContent = "Última actualización: " + formatearFecha(n.updated_at);      body.appendChild(u);
     }
     const link = document.createElement("a");
     link.className = "card-btn";
