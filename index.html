@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TTPN — Biblioteca Normativa</title>
+<link rel="icon" type="image/svg+xml" href="logo-circular.svg">
+<link rel="apple-touch-icon" href="logo-circular.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root { --gold: #FDBB30; --gold-dark: #E5A21F; --gold-light: #FFF4D6; --black: #231F20; --gray-79: #5B5C5E; --gray-soft: #8A8B8D; --light: #FAFAF7; --border: #E5E5E5; --white: #FFFFFF; --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Inter', -apple-system, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--light); color: var(--black); min-height: 100vh; line-height: 1.5; }
+  .ttpn-circle { border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; color: var(--black); font-family: var(--serif); font-weight: 700; flex-shrink: 0; }
+  .ttpn-circle-lg { width: 88px; height: 88px; font-size: 22px; letter-spacing: 1px; }
+  .ttpn-circle-md { width: 44px; height: 44px; font-size: 13px; letter-spacing: 0.5px; }
+  .ttpn-logo-img-lg { width: 140px; height: 140px; object-fit: contain; }
+  .ttpn-logo-img-md { width: 52px; height: 52px; object-fit: contain; }
+  .ttpn-logo-horizontal { height: 40px; object-fit: contain; filter: brightness(0) invert(1); margin-left: 10px; }
+  .ttpn-logo-horizontal-footer { height: 50px; object-fit: contain; filter: brightness(0) invert(1); margin-bottom: 12px; }
+  .footer-text { opacity: 0.7; font-size: 11px; letter-spacing: 0.08em; }
+  .login-bg { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--black); background-image: radial-gradient(circle at 50% 30%, rgba(253,187,48,0.12) 0%, transparent 55%), linear-gradient(135deg, var(--black) 0%, #2F2A2B 100%); }
+  .login-card { background: var(--white); width: 100%; max-width: 440px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5); border-top: 3px solid var(--gold); }
+  .login-header { background: var(--black); padding: 40px 30px 32px; text-align: center; color: white; border-bottom: 1px solid rgba(253,187,48,0.3); }
+  .login-header .logo-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
+  .login-header .tag { color: white; font-size: 11px; margin-top: 18px; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.85; }
+  .login-body { padding: 32px 30px; background: white; }
+  .login-body label { display: block; font-size: 10px; font-weight: 700; color: var(--gray-79); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .login-body input { width: 100%; padding: 13px 14px; border: 1px solid var(--border); font-family: var(--sans); font-size: 14px; margin-bottom: 18px; outline: none; background: var(--light); }
+  .login-body input:focus { border-color: var(--gold); background: white; }
+  .login-body button.primary { width: 100%; padding: 15px; background: var(--gold); color: var(--black); border: none; font-family: var(--sans); font-weight: 700; font-size: 12px; cursor: pointer; letter-spacing: 0.25em; text-transform: uppercase; }
+  .login-body button.primary:hover { background: var(--gold-dark); }
+  .login-body button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-msg { padding: 12px; font-size: 12px; margin-bottom: 16px; display: none; border-left: 3px solid; }
+  .login-msg.error { background: #FEF2F2; color: #B91C1C; border-color: #B91C1C; }
+  .login-footer { border-top: 1px solid var(--border); padding: 16px; text-align: center; font-size: 9px; color: var(--gray-soft); background: var(--light); letter-spacing: 0.1em; }
+  .dashboard { display: none; }
+  header.topbar { background: var(--black); color: white; padding: 18px 28px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--gold); }
+  .topbar-inner { max-width: 1320px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .topbar-brand { display: flex; align-items: center; gap: 8px; }
+  .topbar-user { display: flex; align-items: center; gap: 14px; font-size: 11px; letter-spacing: 0.1em; }
+  .topbar-user button { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 16px; cursor: pointer; font-size: 10px; font-family: var(--sans); letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; }
+  .topbar-user button:hover { background: var(--gold); color: var(--black); }
+  .hero { background: var(--black); background-image: radial-gradient(circle at 50% 0%, rgba(253,187,48,0.1) 0%, transparent 50%); padding: 60px 24px 56px; text-align: center; color: white; border-bottom: 2px solid var(--gold); }
+  .hero h1 { font-family: var(--serif); font-size: 44px; margin-bottom: 14px; color: white; letter-spacing: 0.04em; font-weight: 500; }
+  .hero h1 span { color: var(--gold); font-style: italic; }
+  .hero .line { width: 60px; height: 2px; background: var(--gold); margin: 16px auto 20px; }
+  .hero p { opacity: 0.85; max-width: 640px; margin: 0 auto 28px; font-size: 14px; line-height: 1.7; }
+  .hero-search { max-width: 660px; margin: 0 auto; position: relative; }
+  .hero-search input { width: 100%; padding: 16px 20px 16px 48px; border: 2px solid var(--gold); font-size: 14px; font-family: var(--sans); box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: white; outline: none; }
+  .hero-search::before { content: "\1F50D"; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; z-index: 1; }
+  .filters { max-width: 1320px; margin: 28px auto 0; padding: 0 24px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip { padding: 9px 16px; background: white; border: 1px solid var(--border); color: var(--gray-79); font-family: var(--sans); font-size: 11px; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; }
+  .chip:hover { border-color: var(--gold); color: var(--black); }
+  .chip.active { background: var(--black); color: var(--gold); border-color: var(--black); }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .filter-row select { padding: 9px 14px; border: 1px solid var(--border); background: white; color: var(--gray-79); font-family: var(--sans); font-size: 12px; cursor: pointer; outline: none; }
+  .toggle-destacados { padding: 9px 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--gray-79); font-family: var(--sans); letter-spacing: 0.05em; }
+  .toggle-destacados.active { background: var(--gold); color: var(--black); border-color: var(--gold); }
+  .btn-admin-new { padding: 10px 18px; background: var(--gold); color: var(--black); border: none; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; }
+  .btn-admin-new:hover { background: var(--gold-dark); }
+  .resultados-count { font-size: 12px; color: var(--gray-79); font-style: italic; }
+  .grid { max-width: 1320px; margin: 28px auto; padding: 0 24px 48px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .card { background: white; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; border: 1px solid var(--border); border-top: 3px solid var(--gray-79); position: relative; transition: all 0.2s; }
+  .card:hover { box-shadow: 0 14px 32px rgba(0,0,0,0.12); transform: translateY(-3px); border-top-color: var(--gold); }
+  .card.destacado { border-top-color: var(--gold); }
+  .card-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+  .card-tag-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .card-tag { background: var(--gold-light); color: var(--black); font-size: 9px; font-weight: 700; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .card-star { color: var(--gold); font-size: 18px; }
+  .card-title { color: var(--black); font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.3; margin-bottom: 10px; }
+  .card-desc { color: var(--gray-79); font-size: 12px; line-height: 1.6; margin-bottom: 14px; flex: 1; }
+  .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-79); margin-bottom: 4px; }
+  .card-meta strong { font-weight: 600; color: var(--black); }
+  .card-fuente { font-size: 10px; color: var(--gray-soft); font-style: italic; margin-bottom: 6px; }
+  .card-updated { font-size: 9px; color: var(--gray-soft); font-style: italic; margin-bottom: 12px; padding: 4px 6px; background: var(--gold-light); border-left: 2px solid var(--gold); }
+  .card-btn { display: block; text-align: center; background: var(--black); color: var(--gold) !important; text-decoration: none; padding: 12px; font-size: 11px; font-weight: 700; margin-top: auto; border-top: 1px solid var(--border); letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; font-family: var(--sans); }
+  .card-btn:hover { background: var(--gold); color: var(--black) !important; }
+  .card-admin-actions { display: flex; gap: 6px; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .card-admin-actions button { flex: 1; padding: 8px; font-size: 10px; border: 1px solid var(--border); background: white; cursor: pointer; font-family: var(--sans); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .card-admin-actions .btn-edit:hover { background: var(--gold); border-color: var(--gold); }
+  .card-admin-actions .btn-delete { color: #B91C1C; }
+  .empty { text-align: center; padding: 80px 20px; color: var(--gray-soft); }
+  .empty h3 { font-family: var(--serif); color: var(--black); font-size: 22px; margin-bottom: 8px; }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: white; width: 100%; max-width: 600px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); border-top: 4px solid var(--gold); }
+  .modal-header { background: var(--black); color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-family: var(--serif); font-size: 22px; color: var(--gold); letter-spacing: 0.08em; font-weight: 500; }
+  .modal-header button { background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; }
+  .modal-body { padding: 28px; max-height: 70vh; overflow-y: auto; }
+  .modal-body label { display: block; font-size: 10px; font-weight: 700; color: var(--gray-79); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); font-family: var(--sans); font-size: 13px; outline: none; background: var(--light); }
+  .modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus { border-color: var(--gold); background: white; }
+  .modal-body textarea { min-height: 80px; resize: vertical; }
+  .modal-body .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-body .check { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; }
+  .modal-body .check input { width: auto; }
+  .modal-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+  .modal-footer button { padding: 12px 24px; border: none; font-family: var(--sans); font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+  .btn-cancel { background: white; color: var(--gray-79); border: 1px solid var(--border) !important; }
+  .btn-save { background: var(--gold); color: var(--black); }
+  .upload-info { font-size: 11px; color: var(--gray-79); margin-top: 4px; font-style: italic; }
+  footer.bottombar { background: var(--black); color: white; text-align: center; padding: 28px 20px; font-size: 11px; border-top: 2px solid var(--gold); letter-spacing: 0.08em; }
+  @media (max-width: 600px) { .hero h1 { font-size: 30px; } .modal-body .row2 { grid-template-columns: 1fr; } .ttpn-logo-horizontal { height: 28px; } }
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login-bg">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-wrap"><img src="logo-circular.svg" class="ttpn-logo-img-lg" alt="TTPN"></div>
+      <div class="tag">Biblioteca Normativa</div>
+    </div>
+    <div class="login-body">
+      <div id="loginError" class="login-msg error"></div>
+      <form id="loginForm">
+        <label>Correo corporativo</label>
+        <input type="email" id="loginUser" placeholder="usuario@ttpn.com.ve" required autocomplete="username" />
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" required autocomplete="current-password" />
+        <button type="submit" class="primary" id="btnLogin">Ingresar</button>
+      </form>
+    </div>
+    <div class="login-footer">ACCESO RESTRINGIDO AL PERSONAL AUTORIZADO · TTPN © 2026</div>
+  </div>
+</div>
+<div id="dashboard" class="dashboard">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand">
+        <img src="logo-circular.svg" class="ttpn-logo-img-md" alt="TTPN">
+        <img src="logo-ttpn.svg" class="ttpn-logo-horizontal" alt="Tinoco, Travieso, Planchart & Núñez">
+      </div>
+      <div class="topbar-user">
+        <span id="userLabel"></span>
+        <button onclick="cerrarSesion()">Salir</button>
+      </div>
+    </div>
+  </header>
+  <section class="hero">
+    <h1>Biblioteca <span>Normativa</span></h1>
+    <div class="line"></div>
+    <p>Legislación, códigos, tratados y jurisprudencia para el ejercicio profesional.<br>Información confiable, actualizada y siempre disponible.</p>
+    <div class="hero-search">
+      <input type="text" id="buscador" placeholder="   Buscar por título, palabra clave o materia…" />
+    </div>
+  </section>
+  <div class="filters">
+    <div class="filter-chips" id="chipsContainer"></div>
+    <div class="filter-row">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="areaSelect"></select>
+        <button class="toggle-destacados" id="destacadosBtn" onclick="toggleDestacados()">★ Solo destacados</button>
+        <button class="btn-admin-new" onclick="abrirModalNueva()">+ Agregar norma</button>
+      </div>
+      <div class="resultados-count" id="resultadosCount">Cargando…</div>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <footer class="bottombar">
+    <img src="logo-ttpn.svg" class="ttpn-logo-horizontal-footer" alt="TTPN">
+    <div class="footer-text">© 2026 · Todos los derechos reservados · Uso interno del Escritorio</div>
+  </footer>
+</div>
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Agregar Norma</h3>
+      <button onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId" />
+      <label>Título de la norma *</label>
+      <input type="text" id="fTitulo" placeholder="Ej: Ley Orgánica del Trabajo (LOTTT)" />
+      <div class="row2">
+        <div><label>Categoría *</label><select id="fCategoria"></select></div>
+        <div><label>Área *</label><select id="fArea"></select></div>
+      </div>
+      <div class="row2">
+        <div><label>Año</label><input type="number" id="fAnio" min="1800" max="2100" placeholder="2024" /></div>
+        <div><label>Fuente</label><input type="text" id="fFuente" placeholder="Asamblea Nacional, TSJ, SAPI…" /></div>
+      </div>
+      <label>Descripción</label>
+      <textarea id="fDesc" placeholder="Resumen breve, número de Gaceta, fecha…"></textarea>
+      <label>URL externa (si la norma se enlaza a una web oficial)</label>
+      <input type="url" id="fUrl" placeholder="https://www.asambleanacional.gob.ve/..." />
+      <label>O subir PDF de la Gaceta Oficial</label>
+      <input type="file" id="fPdf" accept="application/pdf" />
+      <div class="upload-info">Si subes un PDF, se almacenará en Supabase.</div>
+      <div class="check">
+        <input type="checkbox" id="fDestacado" />
+        <label for="fDestacado" style="margin:0; text-transform:none; letter-spacing:0; font-size:13px; color:var(--black);">Marcar como destacada (aparece con estrella)</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btnGuardar" onclick="guardarNorma()">Guardar</button>
+    </div>
+  </div>
+</div>
+<script>
+const SUPABASE_URL = "https://iycqmairtwmhhpqliggs.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_3xsFtZ0IGg0GEfZkgIimeQ_TGXlXA0W";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CATEGORIAS = [
+  { id: "all", label: "Todas" },
+  { id: "constitucion", label: "Constitución" },
+  { id: "codigos", label: "Códigos" },
+  { id: "leyes-organicas", label: "Leyes Orgánicas" },
+  { id: "leyes-especiales", label: "Leyes Especiales" },
+  { id: "tratados", label: "Tratados Internacionales" },
+  { id: "reglamentos", label: "Reglamentos" },
+  { id: "jurisprudencia", label: "Jurisprudencia" },
+  { id: "doctrina", label: "Doctrina" }
+];
+const AREAS = [
+  "Todas las áreas","Laboral","Administrativo","Petrolero y Minas","Tributario",
+  "Propiedad Intelectual","Internacional","Corporativo / Mercantil","Civil","Penal",
+  "Bancario y Financiero","Telecomunicaciones","Ambiental","Consumidor / Competencia",
+  "Arbitraje y RAC","Constitucional"
+];
+let estado = { user: null, normativa: [], categoria: "all", area: "Todas las áreas", busqueda: "", destacados: false };
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const btn = document.getElementById("btnLogin");
+  const errBox = document.getElementById("loginError");
+  errBox.style.display = "none";
+  btn.disabled = true; btn.textContent = "Ingresando…";
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    errBox.textContent = "Credenciales inválidas. Verifique e intente nuevamente.";
+    errBox.style.display = "block";
+    btn.disabled = false; btn.textContent = "Ingresar";
+    return;
+  }
+  await iniciarSesion(data.user);
+});
+async function iniciarSesion(user) {
+  estado.user = user;
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("userLabel").textContent = user.email;
+  inicializarFiltros();
+  await cargarNormativa();
+}
+async function cerrarSesion() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+async function cargarNormativa() {
+  document.getElementById("resultadosCount").textContent = "Cargando…";
+  const { data, error } = await supabaseClient.from("normativa").select("*").order("destacado", { ascending: false }).order("titulo", { ascending: true });
+  if (error) { console.error(error); document.getElementById("resultadosCount").textContent = "Error al cargar."; return; }
+  estado.normativa = data || [];
+  renderResultados();
+}
+function inicializarFiltros() {
+  const chips = document.getElementById("chipsContainer");
+  chips.innerHTML = "";
+  CATEGORIAS.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "chip" + (estado.categoria === c.id ? " active" : "");
+    btn.textContent = c.label;
+    btn.onclick = () => { estado.categoria = c.id; inicializarFiltros(); renderResultados(); };
+    chips.appendChild(btn);
+  });
+  const sel = document.getElementById("areaSelect");
+  sel.innerHTML = "";
+  AREAS.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a; opt.textContent = a;
+    if (a === estado.area) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.onchange = (e) => { estado.area = e.target.value; renderResultados(); };
+  document.getElementById("buscador").oninput = (e) => { estado.busqueda = e.target.value.toLowerCase(); renderResultados(); };
+  document.getElementById("destacadosBtn").classList.toggle("active", estado.destacados);
+  const fCat = document.getElementById("fCategoria");
+  fCat.innerHTML = "";
+  CATEGORIAS.filter(c => c.id !== "all").forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id; opt.textContent = c.label;
+    fCat.appendChild(opt);
+  });
+  const fArea = document.getElementById("fArea");
+  fArea.innerHTML = "";
+  AREAS.filter(a => a !== "Todas las áreas").forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a; opt.textContent = a;
+    fArea.appendChild(opt);
+  });
+}
+function toggleDestacados() {
+  estado.destacados = !estado.destacados;
+  document.getElementById("destacadosBtn").classList.toggle("active", estado.destacados);
+  renderResultados();
+}
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return "";
+  const d = new Date(fechaStr);
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const anio = d.getFullYear();
+  return dia + "/" + mes + "/" + anio;
+}
+function renderResultados() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const filtrados = estado.normativa.filter(n => {
+    const q = estado.busqueda;
+    const matchTexto = !q || (n.titulo||"").toLowerCase().includes(q) || (n.descripcion||"").toLowerCase().includes(q) || (n.fuente||"").toLowerCase().includes(q) || (n.area||"").toLowerCase().includes(q);
+    const matchCat = estado.categoria === "all" || n.categoria === estado.categoria;
+    const matchArea = estado.area === "Todas las áreas" || n.area === estado.area;
+    const matchDest = !estado.destacados || n.destacado;
+    return matchTexto && matchCat && matchArea && matchDest;
+  });
+  document.getElementById("resultadosCount").textContent = filtrados.length + " resultado" + (filtrados.length !== 1 ? "s" : "");
+  if (filtrados.length === 0) {
+    const e = document.createElement("div");
+    e.className = "empty"; e.style.gridColumn = "1/-1";
+    e.innerHTML = '<h3>Sin resultados</h3><p>Ajusta los filtros o agrega nueva normativa.</p>';
+    grid.appendChild(e);
+    return;
+  }
+  filtrados.forEach(n => {
+    const catLabel = (CATEGORIAS.find(c => c.id === n.categoria) || {}).label || n.categoria;
+    const card = document.createElement("div");
+    card.className = "card" + (n.destacado ? " destacado" : "");
+    const body = document.createElement("div");
+    body.className = "card-body";
+    const tagRow = document.createElement("div");
+    tagRow.className = "card-tag-row";
+    const tag = document.createElement("span");
+    tag.className = "card-tag"; tag.textContent = catLabel;
+    tagRow.appendChild(tag);
+    if (n.destacado) {
+      const star = document.createElement("span");
+      star.className = "card-star"; star.textContent = "★";
+      tagRow.appendChild(star);
+    }
+    body.appendChild(tagRow);
+    const title = document.createElement("div");
+    title.className = "card-title"; title.textContent = n.titulo;
+    body.appendChild(title);
+    if (n.descripcion) {
+      const desc = document.createElement("div");
+      desc.className = "card-desc"; desc.textContent = n.descripcion;
+      body.appendChild(desc);
+    }
+    const meta = document.createElement("div");
+    meta.className = "card-meta";
+    const areaEl = document.createElement("strong"); areaEl.textContent = n.area || "";
+    const yearEl = document.createElement("span"); yearEl.textContent = n.anio || "";
+    meta.appendChild(areaEl); meta.appendChild(yearEl);
+    body.appendChild(meta);
+    if (n.fuente) {
+      const f = document.createElement("div");
+      f.className = "card-fuente"; f.textContent = "Fuente: " + n.fuente;
+      body.appendChild(f);
+    }
+    if (n.updated_at) {
+      const u = document.createElement("div");
+      u.className = "card-updated";
+      u.textContent = "Última actualización: " + formatearFecha(n.updated_at) + (n.updated_by_email ? " · " + n.updated_by_email : "");
+      body.appendChild(u);
+    }
+    const link = document.createElement("a");
+    link.className = "card-btn";
+    link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = "VER AQUÍ →";
+    if (n.pdf_path) {
+      link.href = "#";
+      link.onclick = async (e) => {
+        e.preventDefault();
+        const { data, error } = await supabaseClient.storage.from("gacetas").createSignedUrl(n.pdf_path, 3600);
+        if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+        else alert("No se pudo abrir el PDF.");
+      };
+    } else {
+      link.href = n.url || "#";
+    }
+    body.appendChild(link);
+    const adminBox = document.createElement("div");
+    adminBox.className = "card-admin-actions";
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn-edit"; btnEdit.textContent = "Editar";
+    btnEdit.onclick = () => abrirModalEditar(n);
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn-delete"; btnDel.textContent = "Eliminar";
+    btnDel.onclick = () => eliminarNorma(n);
+    adminBox.appendChild(btnEdit); adminBox.appendChild(btnDel);
+    body.appendChild(adminBox);
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+}
+function abrirModalNueva() {
+  document.getElementById("modalTitulo").textContent = "Agregar Norma";
+  document.getElementById("editId").value = "";
+  document.getElementById("fTitulo").value = "";
+  document.getElementById("fCategoria").value = "leyes-organicas";
+  document.getElementById("fArea").value = "Laboral";
+  document.getElementById("fAnio").value = new Date().getFullYear();
+  document.getElementById("fFuente").value = "";
+  document.getElementById("fDesc").value = "";
+  document.getElementById("fUrl").value = "";
+  document.getElementById("fPdf").value = "";
+  document.getElementById("fDestacado").checked = false;
+  document.getElementById("modalBackdrop").classList.add("show");
+}
+function abrirModalEditar(n) {
+  document.getElementById("modalTitulo").textContent = "Editar Norma";
+  document.getElementById("editId").value = n.id;
+  document.getElementById("fTitulo").value = n.titulo || "";
+  document.getElementById("fCategoria").value = n.categoria || "leyes-organicas";
+  document.getElementById("fArea").value = n.area || "Laboral";
+  document.getElementById("fAnio").value = n.anio || "";
+  document.getElementById("fFuente").value = n.fuente || "";
+  document.getElementById("fDesc").value = n.descripcion || "";
+  document.getElementById("fUrl").value = n.url || "";
+  document.getElementById("fPdf").value = "";
+  document.getElementById("fDestacado").checked = !!n.destacado;
+  document.getElementById("modalBackdrop").classList.add("show");
+}
+function cerrarModal() { document.getElementById("modalBackdrop").classList.remove("show"); }
+async function guardarNorma() {
+  const btn = document.getElementById("btnGuardar");
+  btn.disabled = true; btn.textContent = "Guardando…";
+  const id = document.getElementById("editId").value;
+  const payload = {
+    titulo: document.getElementById("fTitulo").value.trim(),
+    categoria: document.getElementById("fCategoria").value,
+    area: document.getElementById("fArea").value,
+    anio: parseInt(document.getElementById("fAnio").value) || null,
+    fuente: document.getElementById("fFuente").value.trim() || null,
+    descripcion: document.getElementById("fDesc").value.trim() || null,
+    url: document.getElementById("fUrl").value.trim() || null,
+    destacado: document.getElementById("fDestacado").checked,
+    updated_by_email: estado.user.email
+  };
+  if (!payload.titulo) { alert("El título es obligatorio."); btn.disabled = false; btn.textContent = "Guardar"; return; }
+  const pdfFile = document.getElementById("fPdf").files[0];
+  if (pdfFile) {
+    const ext = pdfFile.name.split(".").pop();
+    const safeName = payload.titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").substring(0, 50);
+    const fileName = Date.now() + "_" + safeName + "." + ext;
+    const { error: upErr } = await supabaseClient.storage.from("gacetas").upload(fileName, pdfFile, { contentType: "application/pdf" });
+    if (upErr) { alert("Error al subir PDF: " + upErr.message); btn.disabled = false; btn.textContent = "Guardar"; return; }
+    payload.pdf_path = fileName;
+  }
+  let res;
+  if (id) { res = await supabaseClient.from("normativa").update(payload).eq("id", id); }
+  else { res = await supabaseClient.from("normativa").insert(payload); }
+  if (res.error) { alert("Error al guardar: " + res.error.message); }
+  else { cerrarModal(); await cargarNormativa(); }
+  btn.disabled = false; btn.textContent = "Guardar";
+}
+async function eliminarNorma(n) {
+  if (!confirm("¿Eliminar definitivamente \"" + n.titulo + "\"?")) return;
+  if (n.pdf_path) { await supabaseClient.storage.from("gacetas").remove([n.pdf_path]); }
+  const { error } = await supabaseClient.from("normativa").delete().eq("id", n.id);
+  if (error) alert("Error al eliminar: " + error.message);
+  else await cargarNormativa();
+}
+window.addEventListener("DOMContentLoaded", async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data.session?.user) await iniciarSesion(data.session.user);
+});
+</script>
+</body>
+</html>
