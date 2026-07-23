@@ -206,6 +206,8 @@
   </div>
 </div>
 <script>
+const CORREOS_ADMIN = ["mespina@ttpn.com.ve","jnieves@ttpn.com.ve","kjativa@ttpn.com.ve","anamias@ttpn.com.ve","admin@ttpn.com.ve"];
+function esUsuarioAdmin(email) { if (!email) return false; return CORREOS_ADMIN.map(function(c){return c.toLowerCase();}).includes(email.toLowerCase()); }
 const SUPABASE_URL = "https://iycqmairtwmhhpqliggs.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_3xsFtZ0IGg0GEfZkgIimeQ_TGXlXA0W";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -226,8 +228,7 @@ const AREAS = [
   "Bancario y Financiero","Telecomunicaciones","Ambiental","Consumidor / Competencia",
   "Arbitraje y RAC","Constitucional"
 ];
-let estado = { user: null, normativa: [], categoria: "all", area: "Todas las áreas", busqueda: "", destacados: false };
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+let estado = { user: null, esAdmin: false, normativa: [], categoria: "all", area: "Todas las áreas", busqueda: "", destacados: false };document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("loginUser").value.trim();
   const pass = document.getElementById("loginPass").value;
@@ -244,14 +245,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
   await iniciarSesion(data.user);
 });
-async function iniciarSesion(user) {
-  estado.user = user;
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("dashboard").style.display = "block";
-  document.getElementById("userLabel").textContent = user.email;
-  inicializarFiltros();
-  await cargarNormativa();
-}
+async function iniciarSesion(user) { estado.user = user; estado.esAdmin = esUsuarioAdmin(user.email); document.getElementById("loginScreen").style.display = "none"; document.getElementById("dashboard").style.display = "block"; document.getElementById("userLabel").textContent = user.email; const btnNueva = document.querySelector(".btn-admin-new"); if (btnNueva) btnNueva.style.display = estado.esAdmin ? "inline-block" : "none"; inicializarFiltros(); await cargarNormativa(); }
 async function cerrarSesion() {
   await supabaseClient.auth.signOut();
   location.reload();
@@ -389,6 +383,7 @@ function renderResultados() {
       link.href = n.url || "#";
     }
     body.appendChild(link);
+    if (estado.esAdmin) {
     const adminBox = document.createElement("div");
     adminBox.className = "card-admin-actions";
     const btnEdit = document.createElement("button");
@@ -399,6 +394,7 @@ function renderResultados() {
     btnDel.onclick = () => eliminarNorma(n);
     adminBox.appendChild(btnEdit); adminBox.appendChild(btnDel);
     body.appendChild(adminBox);
+    }
     card.appendChild(body);
     grid.appendChild(card);
   });
