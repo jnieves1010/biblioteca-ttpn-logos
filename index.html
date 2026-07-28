@@ -39,9 +39,11 @@
   .login-msg.error { background: #FEF2F2; color: #B91C1C; border-color: #B91C1C; }
   .login-footer { border-top: 1px solid var(--border); padding: 16px; text-align: center; font-size: 9px; color: var(--gray-soft); background: var(--light); letter-spacing: 0.1em; }
   .dashboard { display: none; }
-  header.topbar { background: var(--black); color: white; padding: 18px 28px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--gold); }
+  header.topbar { background: var(--green); color: white; padding: 22px 28px; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--gold); }
   .topbar-inner { max-width: 1320px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
   .topbar-brand { display: flex; align-items: center; gap: 8px; }
+  .ttpn-logo-img-top { width: 72px; height: 72px; object-fit: contain; }
+.topbar-logo-right { display: flex; align-items: center; }
   .topbar-user { display: flex; align-items: center; gap: 14px; font-size: 11px; letter-spacing: 0.1em; }
   .topbar-user button { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 8px 16px; cursor: pointer; font-size: 10px; font-family: var(--sans); letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; }
   .topbar-user button:hover { background: var(--gold); color: var(--black); }
@@ -133,14 +135,11 @@
 <div id="dashboard" class="dashboard">
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="topbar-brand">
-        <img src="logo-circular.svg" class="ttpn-logo-img-md" alt="TTPN">
-        <img src="logo-ttpn.svg" class="ttpn-logo-horizontal" alt="Tinoco, Travieso, Planchart & Núñez">
-      </div>
       <div class="topbar-user">
         <span id="userLabel"></span>
         <button onclick="cerrarSesion()">Salir</button>
       </div>
+      <div class="topbar-logo-right">logo-circular.svgttpn-logo-img-top" alt="TTPN"></div>
     </div>
   </header>
   <section class="hero">
