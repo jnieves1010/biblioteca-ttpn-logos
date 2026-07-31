@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TTPN - Biblioteca Normativa</title>
+<link rel="icon" type="image/svg+xml" href="logo-circular.svg">
+<link rel="apple-touch-icon" href="logo-circular.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --gold: #FDBB30;
+    --gold-dark: #E5A21F;
+    --green: #234A3C;
+    --green-light: #2E5B4A;
+    --cool-gray: #A7A8AA;
+    --cream: #F5F1E8;
+    --cream-dark: #E4DDCC;
+    --gray-dark: #3A3A3A;
+    --gray-79: #5B5C5E;
+    --gray-soft: #8A8B8D;
+    --light: #FAFAF7;
+    --border: #E5E5E5;
+    --white: #FFFFFF;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--light); color: var(--gray-dark); min-height: 100vh; line-height: 1.5; }
+  .ttpn-logo-img-lg { width: 110px; height: 110px; background-image: url('logo-circular.svg'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+  .ttpn-logo-horizontal-footer { height: 70px; background-image: url('logo-ttpn.svg'); background-size: contain; background-repeat: no-repeat; background-position: center; filter: brightness(0) invert(1); margin-bottom: 12px; }
+  .footer-rif { color: #D9DAD9; font-family: var(--serif); font-size: 14px; letter-spacing: 0.25em; margin-bottom: 10px; font-weight: 500; }
+  .footer-text { opacity: 0.9; font-size: 11px; letter-spacing: 0.08em; color: #D9DAD9; }
+
+  /* ===== LOGIN ===== */
+  .login-bg { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--gray-79); }
+  .login-card { background: var(--white); width: 100%; max-width: 440px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5); border-top: 3px solid var(--gold); }
+  .login-header { background: var(--green); padding: 40px 30px 32px; text-align: center; color: white; border-bottom: 1px solid rgba(253,187,48,0.3); }
+  .login-header .logo-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
+  .login-header .tag { color: var(--cool-gray); font-size: 12px; margin-top: 18px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; }
+  .login-body { padding: 32px 30px; background: white; }
+  .login-body label { display: block; font-size: 10px; font-weight: 700; color: var(--gray-79); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .login-body input { width: 100%; padding: 13px 14px; border: 1px solid var(--border); font-family: var(--sans); font-size: 14px; margin-bottom: 18px; outline: none; background: var(--light); }
+  .login-body input:focus { border-color: var(--gold); background: white; }
+  .login-body button.primary { width: 100%; padding: 15px; background: var(--gold); color: var(--gray-dark); border: none; font-family: var(--sans); font-weight: 700; font-size: 12px; cursor: pointer; letter-spacing: 0.25em; text-transform: uppercase; }
+  .login-body button.primary:hover { background: var(--gold-dark); }
+  .login-body button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .login-msg { padding: 12px; font-size: 12px; margin-bottom: 16px; display: none; border-left: 3px solid; }
+  .login-msg.error { background: #FEF2F2; color: #B91C1C; border-color: #B91C1C; }
+  .login-footer { border-top: 1px solid var(--border); padding: 16px; text-align: center; font-size: 9px; color: var(--gray-soft); background: var(--light); letter-spacing: 0.1em; }
+
+  /* ===== DASHBOARD ===== */
+  .dashboard { display: none; }
+
+  /* ===== BANNER SUPERIOR (estilo ACTUALIDAD JURIDICA) ===== */
+  header.topbar { background: var(--green); color: white; padding: 28px 40px; position: sticky; top: 0; z-index: 30; border-bottom: 3px solid var(--gold); position: relative; }
+  .topbar-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 24px; }
+  .banner-text { display: flex; flex-direction: column; line-height: 1; flex-shrink: 0; }
+  .banner-text .b-biblio { font-family: var(--serif); color: var(--gold); font-size: 30px; font-weight: 400; letter-spacing: 0.35em; text-transform: uppercase; }
+  .banner-text .b-normativa { font-family: var(--serif); color: var(--gold); font-size: 46px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+  .banner-line { flex: 1; height: 2px; background: var(--gold); min-width: 40px; }
+  .banner-logo { width: 96px; height: 96px; background-image: url('logo-circular.svg'); background-size: contain; background-repeat: no-repeat; background-position: center; flex-shrink: 0; }
+
+  /* ===== MENU HAMBURGUESA ===== */
+  .menu-btn { position: absolute; top: 16px; right: 20px; background: transparent; border: none; cursor: pointer; padding: 8px; z-index: 40; display: flex; flex-direction: column; gap: 4px; }
+  .menu-btn span { display: block; width: 24px; height: 2px; background: var(--gold); transition: all 0.2s; }
+  .menu-dropdown { position: absolute; top: 54px; right: 20px; background: white; box-shadow: 0 12px 30px rgba(0,0,0,0.25); border-top: 3px solid var(--gold); min-width: 220px; z-index: 50; display: none; overflow: hidden; }
+  .menu-dropdown.show { display: block; }
+  .menu-dropdown .menu-user { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .menu-dropdown .menu-user .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gray-soft); margin-bottom: 4px; }
+  .menu-dropdown .menu-user .email { font-size: 13px; color: var(--gray-dark); font-weight: 600; word-break: break-all; }
+  .menu-dropdown .menu-logout { width: 100%; text-align: left; padding: 14px 18px; background: white; border: none; cursor: pointer; font-family: var(--sans); font-size: 13px; color: var(--gray-dark); font-weight: 600; letter-spacing: 0.05em; }
+  .menu-dropdown .menu-logout:hover { background: var(--green); color: var(--gold); }
+
+  /* ===== HERO (reducido, solo buscador + parrafo) ===== */
+  .hero { background: var(--cool-gray); padding: 32px 24px 34px; text-align: center; color: var(--gray-dark); border-bottom: 2px solid var(--gold); }
+  .hero p { opacity: 0.9; max-width: 640px; margin: 0 auto 20px; font-size: 14px; line-height: 1.7; color: var(--gray-dark); }
+  .hero-search { max-width: 660px; margin: 0 auto; position: relative; }
+  .hero-search input { width: 100%; padding: 16px 20px 16px 48px; border: 2px solid var(--gold); font-size: 14px; font-family: var(--sans); box-shadow: 0 10px 30px rgba(0,0,0,0.15); background: white; outline: none; }
+
+  /* ===== FILTROS ===== */
+  .filters { max-width: 1320px; margin: 28px auto 0; padding: 0 24px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip { padding: 9px 16px; background: var(--gold); border: 1px solid var(--gold); color: var(--gray-dark); font-family: var(--sans); font-size: 11px; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; transition: all 0.2s; }
+  .chip:hover { background: var(--gold-dark); border-color: var(--gold-dark); color: var(--gray-dark); }
+  .chip.active { background: var(--green); color: var(--gold); border-color: var(--green); }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .filter-row select { padding: 9px 14px; border: 1px solid var(--border); background: white; color: var(--gray-79); font-family: var(--sans); font-size: 12px; cursor: pointer; outline: none; }
+  .toggle-destacados { padding: 9px 16px; border: 1px solid var(--border); background: white; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--gray-79); font-family: var(--sans); letter-spacing: 0.05em; }
+  .toggle-destacados.active { background: var(--gold); color: var(--gray-dark); border-color: var(--gold); }
+  .btn-admin-new { padding: 10px 18px; background: var(--green); color: var(--gold); border: none; font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; }
+  .btn-admin-new:hover { background: var(--green-light); }
+  .resultados-count { font-size: 12px; color: var(--gray-79); font-style: italic; }
+
+  /* ===== CARDS ===== */
+  .grid { max-width: 1320px; margin: 28px auto; padding: 0 24px 48px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .card { background: var(--cream); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; border: 1px solid var(--cream-dark); border-top: 3px solid var(--gold); position: relative; transition: all 0.2s; }
+  .card:hover { box-shadow: 0 14px 32px rgba(0,0,0,0.12); transform: translateY(-3px); border-top-color: var(--gold-dark); }
+  .card.destacado { border-top-color: var(--gold); }
+  .card-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+  .card-tag-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .card-tag { background: var(--cream-dark); color: var(--gray-dark); font-size: 9px; font-weight: 700; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .card-star { color: var(--gold); font-size: 18px; }
+  .card-title { color: var(--gray-dark); font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.3; margin-bottom: 10px; }
+  .card-desc { color: var(--gray-79); font-size: 12px; line-height: 1.6; margin-bottom: 14px; flex: 1; }
+  .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-79); margin-bottom: 4px; }
+  .card-meta strong { font-weight: 600; color: var(--gray-dark); }
+  .card-fuente { font-size: 10px; color: var(--gray-soft); font-style: italic; margin-bottom: 6px; }
+  .card-updated { font-size: 9px; color: var(--gray-dark); font-style: italic; margin-bottom: 12px; padding: 4px 6px; background: var(--cream-dark); border-left: 2px solid var(--gold); }
+  .card-btn { display: block; text-align: center; background: var(--gold); color: var(--gray-dark) !important; text-decoration: none; padding: 12px; font-size: 11px; font-weight: 700; margin-top: auto; border-top: 1px solid var(--cream-dark); letter-spacing: 0.25em; text-transform: uppercase; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+  .card-btn:hover { background: var(--gold-dark); color: var(--gray-dark) !important; }
+  .card-admin-actions { display: flex; gap: 6px; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--cream-dark); }
+  .card-admin-actions button { flex: 1; padding: 8px; font-size: 10px; border: 1px solid var(--cream-dark); background: white; cursor: pointer; font-family: var(--sans); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .card-admin-actions .btn-edit:hover { background: var(--gold); border-color: var(--gold); }
+  .card-admin-actions .btn-delete { color: #B91C1C; }
+  .empty { text-align: center; padding: 80px 20px; color: var(--gray-soft); }
+  .empty h3 { font-family: var(--serif); color: var(--gray-dark); font-size: 22px; margin-bottom: 8px; }
+
+  /* ===== MODAL ===== */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: white; width: 100%; max-width: 600px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); border-top: 4px solid var(--gold); }
+  .modal-header { background: var(--green); color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-family: var(--serif); font-size: 22px; color: var(--gold); letter-spacing: 0.08em; font-weight: 500; }
+  .modal-header button { background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; }
+  .modal-body { padding: 28px; max-height: 70vh; overflow-y: auto; }
+  .modal-body label { display: block; font-size: 10px; font-weight: 700; color: var(--gray-79); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.15em; }
+  .modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); font-family: var(--sans); font-size: 13px; outline: none; background: var(--light); }
+  .modal-body input:focus, .modal-body select:focus, .modal-body textarea:focus { border-color: var(--gold); background: white; }
+  .modal-body textarea { min-height: 80px; resize: vertical; }
+  .modal-body .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-body .check { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; }
+  .modal-body .check input { width: auto; }
+  .modal-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+  .modal-footer button { padding: 12px 24px; border: none; font-family: var(--sans); font-weight: 700; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+  .btn-cancel { background: white; color: var(--gray-79); border: 1px solid var(--border) !important; }
+  .btn-save { background: var(--gold); color: var(--gray-dark); }
+
+  /* ===== FOOTER ===== */
+  footer.bottombar { background: var(--green); color: white; text-align: center; padding: 36px 20px; font-size: 11px; border-top: 2px solid var(--gold); letter-spacing: 0.08em; }
+  .upload-info { font-size: 11px; color: var(--gray-79); margin-top: 4px; font-style: italic; }
+  @media (max-width: 700px) {
+    .banner-text .b-biblio { font-size: 20px; letter-spacing: 0.25em; }
+    .banner-text .b-normativa { font-size: 30px; }
+    .banner-logo { width: 64px; height: 64px; }
+    .banner-line { min-width: 20px; }
+    header.topbar { padding: 22px 20px; }
+    .modal-body .row2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login-bg">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-wrap"><div class="ttpn-logo-img-lg" role="img" aria-label="TTPN"></div></div>
+      <div class="tag">Biblioteca Normativa</div>
+    </div>
+    <div class="login-body">
+      <div id="loginError" class="login-msg error"></div>
+      <form id="loginForm">
+        <label>Correo corporativo</label>
+        <input type="email" id="loginUser" placeholder="usuario@ttpn.com.ve" required autocomplete="username" />
+        <label>Contrasena</label>
+        <input type="password" id="loginPass" placeholder="password" required autocomplete="current-password" />
+        <button type="submit" class="primary" id="btnLogin">Ingresar</button>
+      </form>
+    </div>
+    <div class="login-footer">ACCESO RESTRINGIDO AL PERSONAL AUTORIZADO - TTPN 2026</div>
+  </div>
+</div>
+<div id="dashboard" class="dashboard">
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+    <div class="menu-dropdown" id="menuDropdown">
+      <div class="menu-user">
+        <div class="label">Perfil</div>
+        <div class="email" id="menuUserEmail"></div>
+      </div>
+      <button class="menu-logout" onclick="cerrarSesion()">Cerrar sesion</button>
+    </div>
+    <div class="topbar-inner">
+      <div class="banner-text">
+        <span class="b-biblio">Biblioteca</span>
+        <span class="b-normativa">Normativa</span>
+      </div>
+      <div class="banner-line"></div>
+      <div class="banner-logo" role="img" aria-label="TTPN"></div>
+    </div>
+  </header>
+  <section class="hero">
+    <p>Legislacion, codigos, tratados y jurisprudencia para el ejercicio profesional.<br>Informacion confiable, actualizada y siempre disponible.</p>
+    <div class="hero-search">
+      <input type="text" id="buscador" placeholder="Buscar por titulo, palabra clave o materia" />
+    </div>
+  </section>
+  <div class="filters">
+    <div class="filter-chips" id="chipsContainer"></div>
+    <div class="filter-row">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="areaSelect"></select>
+        <button class="toggle-destacados" id="destacadosBtn" onclick="toggleDestacados()">Solo destacados</button>
+        <button class="btn-admin-new" id="btnAgregarNorma" onclick="abrirModalNueva()" style="display:none;">+ Agregar norma</button>
+      </div>
+      <div class="resultados-count" id="resultadosCount">Cargando</div>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <footer class="bottombar">
+    <div class="ttpn-logo-horizontal-footer" role="img" aria-label="TTPN"></div>
+    <div class="footer-rif">RIF: J-30503187-8</div>
+    <div class="footer-text">2026 - Todos los derechos reservados - Uso interno del Escritorio</div>
+  </footer>
+</div>
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Agregar Norma</h3>
+      <button onclick="cerrarModal()">X</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId" />
+      <label>Titulo de la norma *</label>
+      <input type="text" id="fTitulo" placeholder="Ej: Ley Organica del Trabajo" />
+      <div class="row2">
+        <div><label>Categoria *</label><select id="fCategoria"></select></div>
+        <div><label>Area *</label><select id="fArea"></select></div>
+      </div>
+      <div class="row2">
+        <div><label>Ano</label><input type="number" id="fAnio" min="1800" max="2100" placeholder="2024" /></div>
+        <div><label>Fuente</label><input type="text" id="fFuente" placeholder="Asamblea Nacional, TSJ, SAPI" /></div>
+      </div>
+      <label>Descripcion</label>
+      <textarea id="fDesc" placeholder="Resumen breve"></textarea>
+      <label>URL externa</label>
+      <input type="url" id="fUrl" placeholder="https://" />
+      <label>O subir PDF de la Gaceta Oficial</label>
+      <input type="file" id="fPdf" accept="application/pdf" />
+      <div class="upload-info">Si subes un PDF, se almacenara en Supabase.</div>
+      <div class="check">
+        <input type="checkbox" id="fDestacado" />
+        <label for="fDestacado" style="margin:0; text-transform:none; letter-spacing:0; font-size:13px; color:var(--gray-dark);">Marcar como destacada</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btnGuardar" onclick="guardarNorma()">Guardar</button>
+    </div>
+  </div>
+</div>
+<script>
+const CORREOS_ADMIN = ["mespina@ttpn.com.ve","jnieves@ttpn.com.ve","kjativa@ttpn.com.ve","anamias@ttpn.com.ve","admin@ttpn.com.ve"];
+const SUPABASE_URL = "https://iycqmairtwmhhpqliggs.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_3xsFtZ0IGg0GEfZkgIimeQ_TGXlXA0W";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CATEGORIAS = [
+{ id: "all", label: "Todas" },
+{ id: "constitucion", label: "Constitucion" },
+{ id: "codigos", label: "Codigos" },
+{ id: "leyes-organicas", label: "Leyes Organicas" },
+{ id: "leyes-especiales", label: "Leyes Especiales" },
+{ id: "tratados", label: "Tratados Internacionales" },
+{ id: "reglamentos", label: "Reglamentos" },
+{ id: "jurisprudencia", label: "Jurisprudencia" },
+{ id: "doctrina", label: "Doctrina" }
+];
+const AREAS = ["Todas las areas","Laboral","Administrativo","Petrolero y Minas","Tributario","Propiedad Intelectual","Internacional","Corporativo / Mercantil","Civil","Penal","Bancario y Financiero","Telecomunicaciones","Ambiental","Consumidor / Competencia","Arbitraje y RAC","Constitucional"];
+let estado = { user: null, esAdmin: false, normativa: [], categoria: "all", area: "Todas las areas", busqueda: "", destacados: false };
+function esUsuarioAdmin(email) { if (!email) return false; return CORREOS_ADMIN.map(function(c){return c.toLowerCase();}).includes(email.toLowerCase()); }
+function toggleMenu() { document.getElementById("menuDropdown").classList.toggle("show"); }
+document.addEventListener("click", function(e) {
+  const menu = document.getElementById("menuDropdown");
+  const btn = document.getElementById("menuBtn");
+  if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) { menu.classList.remove("show"); }
+});
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+e.preventDefault();
+const email = document.getElementById("loginUser").value.trim();
+const pass = document.getElementById("loginPass").value;
+const btn = document.getElementById("btnLogin");
+const errBox = document.getElementById("loginError");
+errBox.style.display = "none";
+btn.disabled = true; btn.textContent = "Ingresando";
+const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+if (error) { errBox.textContent = "Credenciales invalidas."; errBox.style.display = "block"; btn.disabled = false; btn.textContent = "Ingresar"; return; }
+await iniciarSesion(data.user);
+});
+async function iniciarSesion(user) {
+estado.user = user;
+estado.esAdmin = esUsuarioAdmin(user.email);
+document.getElementById("loginScreen").style.display = "none";
+document.getElementById("dashboard").style.display = "block";
+document.getElementById("menuUserEmail").textContent = user.email;
+document.getElementById("btnAgregarNorma").style.display = estado.esAdmin ? "inline-block" : "none";
+inicializarFiltros();
+await cargarNormativa();
+}
+async function cerrarSesion() { await supabaseClient.auth.signOut(); location.reload(); }
+async function cargarNormativa() {
+document.getElementById("resultadosCount").textContent = "Cargando";
+const { data, error } = await supabaseClient.from("normativa").select("*").order("destacado", { ascending: false }).order("titulo", { ascending: true });
+if (error) { document.getElementById("resultadosCount").textContent = "Error"; return; }
+estado.normativa = data || [];
+renderResultados();
+}
+function inicializarFiltros() {
+const chips = document.getElementById("chipsContainer");
+chips.innerHTML = "";
+CATEGORIAS.forEach(c => {
+const btn = document.createElement("button");
+btn.className = "chip" + (estado.categoria === c.id ? " active" : "");
+btn.textContent = c.label;
+btn.onclick = () => { estado.categoria = c.id; inicializarFiltros(); renderResultados(); };
+chips.appendChild(btn);
+});
+const sel = document.getElementById("areaSelect");
+sel.innerHTML = "";
+AREAS.forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.textContent = a; if (a === estado.area) opt.selected = true; sel.appendChild(opt); });
+sel.onchange = (e) => { estado.area = e.target.value; renderResultados(); };
+document.getElementById("buscador").oninput = (e) => { estado.busqueda = e.target.value.toLowerCase(); renderResultados(); };
+document.getElementById("destacadosBtn").classList.toggle("active", estado.destacados);
+const fCat = document.getElementById("fCategoria");
+fCat.innerHTML = "";
+CATEGORIAS.filter(c => c.id !== "all").forEach(c => { const opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.label; fCat.appendChild(opt); });
+const fArea = document.getElementById("fArea");
+fArea.innerHTML = "";
+AREAS.filter(a => a !== "Todas las areas").forEach(a => { const opt = document.createElement("option"); opt.value = a; opt.textContent = a; fArea.appendChild(opt); });
+}
+function toggleDestacados() { estado.destacados = !estado.destacados; document.getElementById("destacadosBtn").classList.toggle("active", estado.destacados); renderResultados(); }
+function formatearFecha(fechaStr) { if (!fechaStr) return ""; const d = new Date(fechaStr); return String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear(); }
+function renderResultados() {
+const grid = document.getElementById("grid");
+grid.innerHTML = "";
+const filtrados = estado.normativa.filter(n => {
+const q = estado.busqueda;
+const matchTexto = !q || (n.titulo||"").toLowerCase().includes(q) || (n.descripcion||"").toLowerCase().includes(q) || (n.fuente||"").toLowerCase().includes(q) || (n.area||"").toLowerCase().includes(q);
+const matchCat = estado.categoria === "all" || n.categoria === estado.categoria;
+const matchArea = estado.area === "Todas las areas" || n.area === estado.area;
+const matchDest = !estado.destacados || n.destacado;
+return matchTexto && matchCat && matchArea && matchDest;
+});
+document.getElementById("resultadosCount").textContent = filtrados.length + " resultado" + (filtrados.length !== 1 ? "s" : "");
+if (filtrados.length === 0) { const e = document.createElement("div"); e.className = "empty"; e.style.gridColumn = "1/-1"; e.innerHTML = "<h3>Sin resultados</h3><p>Ajusta los filtros o agrega nueva normativa.</p>"; grid.appendChild(e); return; }
+filtrados.forEach(n => {
+const catLabel = (CATEGORIAS.find(c => c.id === n.categoria) || {}).label || n.categoria;
+const card = document.createElement("div");
+card.className = "card" + (n.destacado ? " destacado" : "");
+const body = document.createElement("div");
+body.className = "card-body";
+const tagRow = document.createElement("div");
+tagRow.className = "card-tag-row";
+const tag = document.createElement("span");
+tag.className = "card-tag"; tag.textContent = catLabel;
+tagRow.appendChild(tag);
+if (n.destacado) { const star = document.createElement("span"); star.className = "card-star"; star.textContent = "*"; tagRow.appendChild(star); }
+body.appendChild(tagRow);
+const title = document.createElement("div"); title.className = "card-title"; title.textContent = n.titulo; body.appendChild(title);
+if (n.descripcion) { const desc = document.createElement("div"); desc.className = "card-desc"; desc.textContent = n.descripcion; body.appendChild(desc); }
+const meta = document.createElement("div"); meta.className = "card-meta";
+const areaEl = document.createElement("strong"); areaEl.textContent = n.area || "";
+const yearEl = document.createElement("span"); yearEl.textContent = n.anio || "";
+meta.appendChild(areaEl); meta.appendChild(yearEl); body.appendChild(meta);
+if (n.fuente) { const f = document.createElement("div"); f.className = "card-fuente"; f.textContent = "Fuente: " + n.fuente; body.appendChild(f); }
+if (n.updated_at) { const u = document.createElement("div"); u.className = "card-updated"; u.textContent = "Ultima actualizacion: " + formatearFecha(n.updated_at); body.appendChild(u); }
+const link = document.createElement("a");
+link.className = "card-btn";
+link.target = "_blank"; link.rel = "noopener noreferrer";
+link.textContent = "VER AQUI";
+if (n.pdf_path) {
+link.href = "#";
+link.onclick = async (e) => { e.preventDefault(); const { data } = await supabaseClient.storage.from("gacetas").createSignedUrl(n.pdf_path, 3600); if (data && data.signedUrl) window.open(data.signedUrl, "_blank"); else alert("No se pudo abrir el PDF."); };
+} else {
+link.href = n.url || "#";
+}
+body.appendChild(link);
+if (estado.esAdmin) {
+const adminBox = document.createElement("div");
+adminBox.className = "card-admin-actions";
+const btnEdit = document.createElement("button");
+btnEdit.className = "btn-edit"; btnEdit.textContent = "Editar";
+btnEdit.onclick = () => abrirModalEditar(n);
+const btnDel = document.createElement("button");
+btnDel.className = "btn-delete"; btnDel.textContent = "Eliminar";
+btnDel.onclick = () => eliminarNorma(n);
+adminBox.appendChild(btnEdit); adminBox.appendChild(btnDel);
+body.appendChild(adminBox);
+}
+card.appendChild(body); grid.appendChild(card);
+});
+}
+function abrirModalNueva() {
+if (!estado.esAdmin) { alert("No tienes permisos."); return; }
+document.getElementById("modalTitulo").textContent = "Agregar Norma";
+document.getElementById("editId").value = "";
+document.getElementById("fTitulo").value = "";
+document.getElementById("fCategoria").value = "leyes-organicas";
+document.getElementById("fArea").value = "Laboral";
+document.getElementById("fAnio").value = new Date().getFullYear();
+document.getElementById("fFuente").value = "";
+document.getElementById("fDesc").value = "";
+document.getElementById("fUrl").value = "";
+document.getElementById("fPdf").value = "";
+document.getElementById("fDestacado").checked = false;
+document.getElementById("modalBackdrop").classList.add("show");
+}
+function abrirModalEditar(n) {
+if (!estado.esAdmin) { alert("No tienes permisos."); return; }
+document.getElementById("modalTitulo").textContent = "Editar Norma";
+document.getElementById("editId").value = n.id;
+document.getElementById("fTitulo").value = n.titulo || "";
+document.getElementById("fCategoria").value = n.categoria || "leyes-organicas";
+document.getElementById("fArea").value = n.area || "Laboral";
+document.getElementById("fAnio").value = n.anio || "";
+document.getElementById("fFuente").value = n.fuente || "";
+document.getElementById("fDesc").value = n.descripcion || "";
+document.getElementById("fUrl").value = n.url || "";
+document.getElementById("fPdf").value = "";
+document.getElementById("fDestacado").checked = !!n.destacado;
+document.getElementById("modalBackdrop").classList.add("show");
+}
+function cerrarModal() { document.getElementById("modalBackdrop").classList.remove("show"); }
+async function guardarNorma() {
+if (!estado.esAdmin) { alert("No tienes permisos."); return; }
+const btn = document.getElementById("btnGuardar");
+btn.disabled = true; btn.textContent = "Guardando";
+const id = document.getElementById("editId").value;
+const payload = {
+titulo: document.getElementById("fTitulo").value.trim(),
+categoria: document.getElementById("fCategoria").value,
+area: document.getElementById("fArea").value,
+anio: parseInt(document.getElementById("fAnio").value) || null,
+fuente: document.getElementById("fFuente").value.trim() || null,
+descripcion: document.getElementById("fDesc").value.trim() || null,
+url: document.getElementById("fUrl").value.trim() || null,
+destacado: document.getElementById("fDestacado").checked,
+updated_by_email: estado.user.email
+};
+if (!payload.titulo) { alert("El titulo es obligatorio."); btn.disabled = false; btn.textContent = "Guardar"; return; }
+const pdfFile = document.getElementById("fPdf").files[0];
+if (pdfFile) {
+const ext = pdfFile.name.split(".").pop();
+const safeName = payload.titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").substring(0, 50);
+const fileName = Date.now() + "_" + safeName + "." + ext;
+const { error: upErr } = await supabaseClient.storage.from("gacetas").upload(fileName, pdfFile, { contentType: "application/pdf" });
+if (upErr) { alert("Error al subir PDF: " + upErr.message); btn.disabled = false; btn.textContent = "Guardar"; return; }
+payload.pdf_path = fileName;
+}
+let res;
+if (id) { res = await supabaseClient.from("normativa").update(payload).eq("id", id); }
+else { res = await supabaseClient.from("normativa").insert(payload); }
+if (res.error) { alert("Error al guardar: " + res.error.message); }
+else { cerrarModal(); await cargarNormativa(); }
+btn.disabled = false; btn.textContent = "Guardar";
+}
+async function eliminarNorma(n) {
+if (!estado.esAdmin) { alert("No tienes permisos."); return; }
+if (!confirm("Eliminar definitivamente: " + n.titulo + "?")) return;
+if (n.pdf_path) { await supabaseClient.storage.from("gacetas").remove([n.pdf_path]); }
+const { error } = await supabaseClient.from("normativa").delete().eq("id", n.id);
+if (error) alert("Error al eliminar: " + error.message);
+else { await cargarNormativa(); }
+}
+window.addEventListener("DOMContentLoaded", async () => {
+const { data } = await supabaseClient.auth.getSession();
+if (data.session && data.session.user) await iniciarSesion(data.session.user);
+});
+</script>
+</body>
+</html>
